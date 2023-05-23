@@ -504,171 +504,47 @@ void obj_init(struct class_obj *obj, int x, int y, int dir, char *objname)
 ///////////////
 // MAPA
 //////////////
-void generateRandomMap(char **map, int height, int width)
-{
-    int i, j;
-    char **map_aux;
+void generateMap(int width, int height, char** map) {
+    // Criação das paredes nas primeiras e últimas linhas
+    for (int i = 0; i < width; i++) {
+        map[0][i] = '#';
+        map[1][i] = '#';
+        map[height - 2][i] = '#';
+        map[height - 1][i] = '#';
+    }
 
-    // Inicializa o gerador de números aleatórios
-    srand(time(NULL));
+    // Criação das paredes nas primeiras e últimas colunas
+    for (int i = 0; i < height; i++) {
+        map[i][0] = '#';
+        map[i][1] = '#';
+        map[i][width - 2] = '#';
+        map[i][width - 1] = '#';
+    }
 
-    // Gera o mapa aleatório
-    for (i = (height - MAP_HEIGHT) / 2 + 1; i < (height - MAP_HEIGHT) / 2 + MAP_HEIGHT - 1; i++)
-    {
-        for (j = (width - MAP_WIDTH) / 2 + 1; j < (width - MAP_WIDTH) / 2 + MAP_WIDTH - 1; j++)
-        {
-            // 40% de chance de ser uma parede
-            if (rand() % 100 < 40)
-            {
-                map[i][j] = '#';
+    // Preenchimento do restante do mapa com paredes probabilísticas
+    srand(time(NULL)); // Inicialização do gerador de números aleatórios
+    for (int i = 2; i < height - 2; i++) {
+        for (int j = 2; j < width - 2; j++) {
+            int randomValue = rand() % 101; // Gera um número aleatório entre 0 e 100
+
+            if (randomValue <= 40) {
+                char* buffer = (char*)malloc(2 * sizeof(char)); // Aloca espaço para o buffer
+                strcpy(buffer, "#");
+                strcpy(map[i] + j, buffer); // Copia o valor do buffer para a célula da matriz
+                free(buffer); // Libera a memória do buffer
             }
-            else
-            {
-                map[i][j] = ' ';
-            }
-        }
-    }
-
-    // Aloca memória para o mapa auxiliar
-    // Aloca memória para o mapa auxiliar
-    map_aux = (char **)malloc(MAP_HEIGHT * sizeof(char *));
-    for (i = 0; i < MAP_HEIGHT; i++)
-    {
-        map_aux[i] = (char *)malloc(MAP_WIDTH * sizeof(char));
-    }
-
-    // Copia o mapa para o mapa auxiliar
-    for (i = (height - MAP_HEIGHT) / 2 + 1; i < (height - MAP_HEIGHT) / 2 + MAP_HEIGHT - 1; i++)
-    {
-        for (j = (width - MAP_WIDTH) / 2 + 1; j < (width - MAP_WIDTH) / 2 + MAP_WIDTH - 1; j++)
-        {
-            map_aux[i][j] = map[i][j];
-        }
-    }
-
-    for (int v = 0; v < 7; v++)
-    {
-
-        for (i = (height - MAP_HEIGHT) / 2 + 1; i < (height - MAP_HEIGHT) / 2 + MAP_HEIGHT - 1; i++)
-        {
-            for (j = (width - MAP_WIDTH) / 2 + 1; j < (width - MAP_WIDTH) / 2 + MAP_WIDTH - 1; j++)
-            {
-
-                int count1 = 0;
-                int count2 = 0;
-
-                if (map[i - 1][j - 1] == '#')
-                    count1++;
-                if (map[i - 1][j] == '#')
-                    count1++;
-                if (map[i - 1][j + 1] == '#')
-                    count1++;
-                if (map[i][j - 1] == '#')
-                    count1++;
-                if (map[i][j + 1] == '#')
-                    count1++;
-                if (map[i + 1][j - 1] == '#')
-                    count1++;
-                if (map[i + 1][j] == '#')
-                    count1++;
-                if (map[i + 1][j + 1] == '#')
-                    count1++;
-
-                if (map[i - 2][j - 2] == '#')
-                    count2++;
-                if (map[i - 2][j - 1] == '#')
-                    count2++;
-                if (map[i - 2][j] == '#')
-                    count2++;
-                if (map[i - 2][j + 1] == '#')
-                    count2++;
-                if (map[i - 2][j + 2] == '#')
-                    count2++;
-
-                if (map[i - 1][j - 2] == '#')
-                    count2++;
-                if (map[i - 1][j - 1] == '#')
-                    count2++;
-                if (map[i - 1][j] == '#')
-                    count2++;
-                if (map[i - 1][j + 1] == '#')
-                    count2++;
-                if (map[i - 1][j + 2] == '#')
-                    count2++;
-
-                if (map[i][j - 2] == '#')
-                    count2++;
-                if (map[i][j - 1] == '#')
-                    count2++;
-                if (map[i][j + 1] == '#')
-                    count2++;
-                if (map[i][j + 2] == '#')
-                    count2++;
-
-                if (map[i + 1][j - 2] == '#')
-                    count2++;
-                if (map[i + 1][j - 1] == '#')
-                    count2++;
-                if (map[i + 1][j] == '#')
-                    count2++;
-                if (map[i + 1][j + 1] == '#')
-                    count2++;
-                if (map[i + 1][j + 2] == '#')
-                    count2++;
-
-                if (map[i + 2][j - 2] == '#')
-                    count2++;
-                if (map[i + 2][j - 1] == '#')
-                    count2++;
-                if (map[i + 2][j] == '#')
-                    count2++;
-                if (map[i + 2][j + 1] == '#')
-                    count2++;
-                if (map[i + 2][j + 2] == '#')
-                    count2++;
-
-                if (count1 >= 5)
-                    map_aux[i][j] = '#';
-            }
-        }
-    }
-
-    // Copia o mapa auxiliar para o mapa
-    for (i = (height - MAP_HEIGHT) / 2 + 1; i < (height - MAP_HEIGHT) / 2 + MAP_HEIGHT - 1; i++)
-    {
-        for (j = (width - MAP_WIDTH) / 2 + 1; j < (width - MAP_WIDTH) / 2 + MAP_WIDTH - 1; j++)
-        {
-            map[i][j] = map_aux[i][j];
         }
     }
 }
 
-void drawMap(char **map, int height, int width)
-{
-    int i = (height - MAP_HEIGHT) / 2;
-    int j = (width - MAP_WIDTH) / 2;
 
-    char c = '/';
-
-    for (; i < (height - MAP_HEIGHT) / 2 + MAP_HEIGHT; i++)
-        mvprintw(i, j - 1, "%c%c", c, c);
-    for (j = (width - MAP_WIDTH) / 2 + 1; j < (width - MAP_WIDTH) / 2 + MAP_WIDTH - 1; j++)
-        mvprintw((height - MAP_HEIGHT) / 2, j, "%c", c);
-
-    for (i = (height - MAP_HEIGHT) / 2 + 1; i < (height - MAP_HEIGHT) / 2 + MAP_HEIGHT - 1; i++)
-    {
-        for (j = (width - MAP_WIDTH) / 2 + 1; j < (width - MAP_WIDTH) / 2 + MAP_WIDTH - 1; j++)
-        {
-            mvprintw(i, j, "%c", map[i][j]);
+void printMap(int width, int height, char** map) {
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            printf("%c", map[i][j]);
         }
+        printf("\n");
     }
-
-    for (i = (height - MAP_HEIGHT) / 2; i < (height - MAP_HEIGHT) / 2 + MAP_HEIGHT; i++)
-        mvprintw(i, j, "%c%c", c, c);
-    for (j = (width - MAP_WIDTH) / 2 + 1; j < (width - MAP_WIDTH) / 2 + MAP_WIDTH - 1; j++)
-        mvprintw((height - MAP_HEIGHT) / 2 + MAP_HEIGHT - 1, j, "%c", c);
-
-    refresh();
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -687,6 +563,12 @@ int main()
     timeout(0);
     leaveok(stdscr, TRUE);
     curs_set(0);
+    char** map = (char**)malloc(height * sizeof(char*)); // Alocação dinâmica da matriz
+
+        for (int i = 0; i < height; i++) {
+        map[i] = (char*)malloc(width * sizeof(char));
+        memset(map[i], ' ', width); // Preenche a linha com espaços em branco
+        }
 
     // Enumera os estados do jogo
     typedef enum
@@ -766,12 +648,8 @@ int main()
         // Jogo
         case ESTADO_GAME:
 
-            // Gera o mapa aleatório
-            generateRandomMap();
-
-            // Desenha o mapa na tela
-            drawMap();
-
+            generateMap(MAP_WIDTH, MAP_HEIGHT, map);
+            printMap(MAP_WIDTH, MAP_HEIGHT, map);
             desenha_hud();
             box(stdscr, 0, 0);
             break;
