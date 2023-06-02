@@ -505,8 +505,8 @@ void obj_init(struct class_obj *obj, int x, int y, int dir, char *objname)
 // MAPA
 //////////////
 
-void generateMap(int width, int height, char** map) {
-    // Criação das paredes nas primeiras e últimas linhas
+void addBorder(int width, int height, char **map)
+{
     for (int i = 0; i < width; i++) {
         map[0][i] = '#';
         map[1][i] = '#';
@@ -521,6 +521,11 @@ void generateMap(int width, int height, char** map) {
         map[i][width - 2] = '#';
         map[i][width - 1] = '#';
     }
+}
+
+
+
+void generateMap(int width, int height, char** map) {
 
     // Preenchimento do restante do mapa com paredes probabilísticas
     srand(time(NULL)); // Inicialização do gerador de números aleatórios
