@@ -504,6 +504,7 @@ void obj_init(struct class_obj *obj, int x, int y, int dir, char *objname)
 ///////////////
 // MAPA
 //////////////
+
 void generateMap(int width, int height, char** map) {
     // Criação das paredes nas primeiras e últimas linhas
     for (int i = 0; i < width; i++) {
@@ -528,15 +529,11 @@ void generateMap(int width, int height, char** map) {
             int randomValue = rand() % 101; // Gera um número aleatório entre 0 e 100
 
             if (randomValue <= 40) {
-                char* buffer = (char*)malloc(2 * sizeof(char)); // Aloca espaço para o buffer
-                strcpy(buffer, "#");
-                strcpy(map[i] + j, buffer); // Copia o valor do buffer para a célula da matriz
-                free(buffer); // Libera a memória do buffer
+                map[i][j] = '#';
             }
         }
     }
 }
-
 
 void printMap(int width, int height, char** map) {
     for (int i = 0; i < height; i++) {
@@ -545,6 +542,47 @@ void printMap(int width, int height, char** map) {
         }
         printf("\n");
     }
+}
+
+void updateMap(int width, int height, char** map) {
+    char** tempMap = (char**)malloc(height * sizeof(char*));
+    for (int i = 0; i < height; i++) {
+        tempMap[i] = (char*)malloc(width * sizeof(char));
+        memcpy(tempMap[i], map[i], width); // Copia o mapa original para o mapa temporário
+    }
+
+    for (int i = 2; i < height - 2; i++) {
+        for (int j = 2; j < width - 2; j++) {
+            // Verifica as 9 células ao redor
+            int count = 0;
+            for (int k = i - 1; k <= i + 1; k++) {
+                for (int l = j - 1; l <= j + 1; l++) {
+                    if (map[k][l] == '#') {
+                        count++;
+                    }
+                }
+            }
+            // Define como parede se tiver 5 ou mais paredes vizinhas
+            if (count >= 5) {
+                tempMap[i][j] = '#';
+            } else {
+                tempMap[i][j] = ' ';
+            }
+        }
+    }
+
+    // Copia o mapa atualizado de volta para o mapa original
+    for (int i = 2; i < height - 2; i++) {
+        for (int j = 2; j < width - 2; j++) {
+            map[i][j] = tempMap[i][j];
+        }
+    }
+
+    // Libera a memória do mapa temporário
+    for (int i = 0; i < height; i++) {
+        free(tempMap[i]);
+    }
+    free(tempMap);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -563,11 +601,10 @@ int main()
     timeout(0);
     leaveok(stdscr, TRUE);
     curs_set(0);
-    char** map = (char**)malloc(height * sizeof(char*)); // Alocação dinâmica da matriz
-
-        for (int i = 0; i < height; i++) {
-        map[i] = (char*)malloc(width * sizeof(char));
-        memset(map[i], ' ', width); // Preenche a linha com espaços em branco
+char** map = (char**)malloc(MAP_HEIGHT * sizeof(char*));
+        for (int i = 0; i < MAP_HEIGHT; i++) {
+        map[i] = (char*)malloc(MAP_WIDTH * sizeof(char));
+        memset(map[i], ' ', MAP_WIDTH); // Preenche a linha com espaços em branco
         }
 
     // Enumera os estados do jogo
