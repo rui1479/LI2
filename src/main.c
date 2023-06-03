@@ -10,6 +10,7 @@
 #define MAP_HEIGHT 48
 #define space 32
 #define enter 10
+#define MAP_RADIUS 5
 
 short arr_size_x;
 #define s_wall "#"
@@ -526,11 +527,8 @@ void addBorder(int width, int height, char **map)
     }
 }
 
-
-
-void generateMap(int width, int height, char** map) {
-
-    // Preenchimento do restante do mapa com paredes probabilísticas
+void generateMap(int width, int height, char **map)
+{   // Preenchimento do restante do mapa com paredes probabilísticas
     srand(time(NULL)); // Inicialização do gerador de números aleatórios
     for (int i = 2; i < height - 2; i++) {
         for (int j = 2; j < width - 2; j++) {
@@ -543,7 +541,8 @@ void generateMap(int width, int height, char** map) {
     }
 }
 
-void printMap(int width, int height, char** map) {
+void printMap(int width, int height, char **map)
+{
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             printf("%c", map[i][j]);
@@ -552,10 +551,11 @@ void printMap(int width, int height, char** map) {
     }
 }
 
-void updateMap(int width, int height, char** map) {
-    char** tempMap = (char**)malloc(height * sizeof(char*));
+void updateMap(int width, int height, char **map)
+{
+    char **tempMap = (char **)malloc(height * sizeof(char *));
     for (int i = 0; i < height; i++) {
-        tempMap[i] = (char*)malloc(width * sizeof(char));
+        tempMap[i] = (char *)malloc(width * sizeof(char));
         memcpy(tempMap[i], map[i], width); // Copia o mapa original para o mapa temporário
     }
 
@@ -574,7 +574,7 @@ void updateMap(int width, int height, char** map) {
             if (count >= 5) {
                 tempMap[i][j] = '#';
             } else {
-                tempMap[i][j] = ' ';
+                tempMap[i][j] = '.';
             }
         }
     }
@@ -591,6 +591,76 @@ void updateMap(int width, int height, char** map) {
         free(tempMap[i]);
     }
     free(tempMap);
+}
+
+
+bool verificaParedeNaDirecao(int playerX, int playerY, int directionX, int directionY, char **map, WINDOW *win) {
+    int x = playerX + directionX;
+    int y = playerY + directionY;
+    if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
+        if (map[y][x] == '#') {
+            // Parede encontrada
+            mvwaddch(win, y, x, '#');
+            return false;
+        }
+    }
+    mvwaddch(win, y, x, map[y][x]);
+
+    // Nenhuma parede encontrada
+    return true;
+}
+
+void desenhaVisao(int playerX, int playerY, char **map, WINDOW *win, int visaoAtivada) {
+    int largura = getmaxx(win);
+    int altura = getmaxy(win);
+
+    if (visaoAtivada) {
+        bool cimaEncontrada = false;
+        bool baixoEncontrada = false;
+        bool esquerdaEncontrada = false;
+        bool direitaEncontrada = false;
+        bool diagonalSupEsqEncontrada = false;
+        bool diagonalSupDirEncontrada = false;
+        bool diagonalInfEsqEncontrada = false;
+        bool diagonalInfDirEncontrada = false;
+
+        // Verifica a primeira ocorrência de parede em cada direção
+        cimaEncontrada = verificaParedeNaDirecao(playerX, playerY, 0, 1, map, win);
+        baixoEncontrada = verificaParedeNaDirecao(playerX, playerY, 0, -1, map, win);
+        esquerdaEncontrada = verificaParedeNaDirecao(playerX, playerY, -1, 0, map, win);
+        direitaEncontrada = verificaParedeNaDirecao(playerX, playerY, 1, 0, map, win);
+        diagonalSupEsqEncontrada = verificaParedeNaDirecao(playerX, playerY, -1, 1, map, win);
+        diagonalSupDirEncontrada = verificaParedeNaDirecao(playerX, playerY, 1, 1, map, win);
+        diagonalInfEsqEncontrada = verificaParedeNaDirecao(playerX, playerY, -1, -1, map, win);
+        diagonalInfDirEncontrada = verificaParedeNaDirecao(playerX, playerY, 1, -1, map, win);
+
+        // Loop para verificar as direções adjacentes até a distância MAP_RADIUS
+        for (int i = 1; i <= MAP_RADIUS; i++) {
+            if (cimaEncontrada && i <= playerY)
+                cimaEncontrada = verificaParedeNaDirecao(playerX, playerY, 0, i, map, win);
+            if (baixoEncontrada && i <= MAP_HEIGHT - playerY - 1)
+                baixoEncontrada = verificaParedeNaDirecao(playerX, playerY, 0, -i, map, win);
+            if (esquerdaEncontrada && i <= playerX)
+                esquerdaEncontrada = verificaParedeNaDirecao(playerX, playerY, -i, 0, map, win);
+            if (direitaEncontrada && i <= MAP_WIDTH - playerX - 1)
+                direitaEncontrada = verificaParedeNaDirecao(playerX, playerY, i, 0, map, win);
+            if (diagonalSupEsqEncontrada && i <= playerX && i <= playerY)
+                diagonalSupEsqEncontrada = verificaParedeNaDirecao(playerX, playerY, -i, i, map, win);
+            if (diagonalSupDirEncontrada && i <= MAP_WIDTH - playerX - 1 && i <= playerY)
+                diagonalSupDirEncontrada = verificaParedeNaDirecao(playerX, playerY, i, i, map, win);
+            if (diagonalInfEsqEncontrada && i <= playerX && i <= MAP_HEIGHT - playerY - 1)
+                diagonalInfEsqEncontrada = verificaParedeNaDirecao(playerX, playerY, -i, -i, map, win);
+            if (diagonalInfDirEncontrada && i <= MAP_WIDTH - playerX - 1 && i <= MAP_HEIGHT - playerY - 1)
+                diagonalInfDirEncontrada = verificaParedeNaDirecao(playerX, playerY, i, -i, map, win);
+        }
+    } else {
+        for (int y = 0; y < altura; y++) {
+            for (int x = 0; x < largura; x++) {
+
+                mvwaddch(win, y, x, map[y][x]);
+            }
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -710,13 +780,14 @@ int main()
     char **map = (char **)malloc(altura * sizeof(char *));
     for (int i = 0; i < altura; i++) {
         map[i] = (char *)malloc(largura * sizeof(char));
-        memset(map[i], ' ', largura); // Preenche a linha com espaços em branco
+        memset(map[i], '.', largura); // Preenche a linha com espaços em branco
     }
     addBorder(largura, altura, map);
     generateMap(largura, altura, map);
 
     int playerX = largura / 2;
     int playerY = altura / 2;
+    int visaoAtivada = 1;
 
     char c;
     do {
@@ -724,20 +795,9 @@ int main()
         werase(win);
 
         // Desenha o mapa na janela
-        for (int i = 0; i < altura; i++) {
-            for (int j = 0; j < largura; j++) {
-                if (map[i][j] == '#') {
-                    wattron(win, COLOR_PAIR(1));
-                } else {
-                    wattron(win, COLOR_PAIR(2));
-                }
-                mvwprintw(win, i, j, "%c", map[i][j]);
-                wattroff(win, COLOR_PAIR(1));
-                wattroff(win, COLOR_PAIR(2));
-            }
-        }
-
-
+        wattron(win, COLOR_PAIR(1));
+        desenhaVisao(playerX, playerY, map, win, visaoAtivada);
+        wattroff(win, COLOR_PAIR(1));
         // Desenha o jogador na posição atual
         wattron(win, COLOR_PAIR(2));
         mvwprintw(win, playerY, playerX, "@");
@@ -750,7 +810,7 @@ int main()
         c = wgetch(win);
 
         // Limpa a posição atual do jogador no mapa
-        map[playerY][playerX] = ' ';
+        map[playerY][playerX] = '.';
 
         // Atualiza a posição do jogador com base na entrada do usuário
         switch (c) {
@@ -775,7 +835,10 @@ int main()
             }
             break;
         case 'p':
-            updateMap(largura, altura, map);
+            updateMap(largura, altura, map); break;
+        case 't':
+            visaoAtivada = !visaoAtivada;
+            break;
         default:
             break;
         }
