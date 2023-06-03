@@ -760,7 +760,7 @@ int main()
             }
             break;
         case 's':
-            if (playerY < MAP_HEIGHT - 3 && map[playerY + 1][playerX] != '#') {
+            if (playerY < altura - 3 && map[playerY + 1][playerX] != '#') {
                 playerY++;
             }
             break;
@@ -770,12 +770,12 @@ int main()
             }
             break;
         case 'd':
-            if (playerX < MAP_WIDTH - 3 && map[playerY][playerX + 1] != '#') {
+            if (playerX < largura - 3 && map[playerY][playerX + 1] != '#') {
                 playerX++;
             }
             break;
         case 'p':
-            updateMap(MAP_WIDTH, MAP_HEIGHT, map);
+            updateMap(largura, altura, map);
         default:
             break;
         }
