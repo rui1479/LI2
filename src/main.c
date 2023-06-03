@@ -593,21 +593,14 @@ void updateMap(int width, int height, char **map)
     free(tempMap);
 }
 
-
-bool verificaParedeNaDirecao(int playerX, int playerY, int directionX, int directionY, char **map, WINDOW *win) {
-    int x = playerX + directionX;
-    int y = playerY + directionY;
+bool verificaParedeNaDirecao(int playerX, int playerY, double x, double y, char **map, WINDOW *win) {
     if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
-        if (map[y][x] == '#') {
-            // Parede encontrada
-            mvwaddch(win, y, x, '#');
+        if (map[(int)y][(int)x] == '#') {
+            mvwaddch(win, y, x, map[(int)y][(int)x]);
             return false;
         }
     }
-    mvwaddch(win, y, x, map[y][x]);
-
-    // Nenhuma parede encontrada
-    return true;
+    mvwaddch(win, y, x, map[(int)y][(int)x]);return true;
 }
 
 void desenhaVisao(int playerX, int playerY, char **map, WINDOW *win, int visaoAtivada) {
@@ -615,48 +608,21 @@ void desenhaVisao(int playerX, int playerY, char **map, WINDOW *win, int visaoAt
     int altura = getmaxy(win);
 
     if (visaoAtivada) {
-        bool cimaEncontrada = false;
-        bool baixoEncontrada = false;
-        bool esquerdaEncontrada = false;
-        bool direitaEncontrada = false;
-        bool diagonalSupEsqEncontrada = false;
-        bool diagonalSupDirEncontrada = false;
-        bool diagonalInfEsqEncontrada = false;
-        bool diagonalInfDirEncontrada = false;
-
-        // Verifica a primeira ocorrência de parede em cada direção
-        cimaEncontrada = verificaParedeNaDirecao(playerX, playerY, 0, 1, map, win);
-        baixoEncontrada = verificaParedeNaDirecao(playerX, playerY, 0, -1, map, win);
-        esquerdaEncontrada = verificaParedeNaDirecao(playerX, playerY, -1, 0, map, win);
-        direitaEncontrada = verificaParedeNaDirecao(playerX, playerY, 1, 0, map, win);
-        diagonalSupEsqEncontrada = verificaParedeNaDirecao(playerX, playerY, -1, 1, map, win);
-        diagonalSupDirEncontrada = verificaParedeNaDirecao(playerX, playerY, 1, 1, map, win);
-        diagonalInfEsqEncontrada = verificaParedeNaDirecao(playerX, playerY, -1, -1, map, win);
-        diagonalInfDirEncontrada = verificaParedeNaDirecao(playerX, playerY, 1, -1, map, win);
-
-        // Loop para verificar as direções adjacentes até a distância MAP_RADIUS
-        for (int i = 1; i <= MAP_RADIUS; i++) {
-            if (cimaEncontrada && i <= playerY)
-                cimaEncontrada = verificaParedeNaDirecao(playerX, playerY, 0, i, map, win);
-            if (baixoEncontrada && i <= MAP_HEIGHT - playerY - 1)
-                baixoEncontrada = verificaParedeNaDirecao(playerX, playerY, 0, -i, map, win);
-            if (esquerdaEncontrada && i <= playerX)
-                esquerdaEncontrada = verificaParedeNaDirecao(playerX, playerY, -i, 0, map, win);
-            if (direitaEncontrada && i <= MAP_WIDTH - playerX - 1)
-                direitaEncontrada = verificaParedeNaDirecao(playerX, playerY, i, 0, map, win);
-            if (diagonalSupEsqEncontrada && i <= playerX && i <= playerY)
-                diagonalSupEsqEncontrada = verificaParedeNaDirecao(playerX, playerY, -i, i, map, win);
-            if (diagonalSupDirEncontrada && i <= MAP_WIDTH - playerX - 1 && i <= playerY)
-                diagonalSupDirEncontrada = verificaParedeNaDirecao(playerX, playerY, i, i, map, win);
-            if (diagonalInfEsqEncontrada && i <= playerX && i <= MAP_HEIGHT - playerY - 1)
-                diagonalInfEsqEncontrada = verificaParedeNaDirecao(playerX, playerY, -i, -i, map, win);
-            if (diagonalInfDirEncontrada && i <= MAP_WIDTH - playerX - 1 && i <= MAP_HEIGHT - playerY - 1)
-                diagonalInfDirEncontrada = verificaParedeNaDirecao(playerX, playerY, i, -i, map, win);
+        double anguloIncremento = M_PI / 64.0;
+        for (double angulo = 0; angulo < 2.0 * M_PI; angulo += anguloIncremento) {
+            for (int i = 1; i < MAP_RADIUS; i++) {
+                double x = playerX + i * cos(angulo);
+                double y = playerY + i * sin(angulo);
+                if (verificaParedeNaDirecao(playerX, playerY, x, y, map, win)) {
+                    mvwaddch(win, y, x, map[(int)y][(int)x]);
+                } else {
+                    break;
+                }
+            }
         }
     } else {
         for (int y = 0; y < altura; y++) {
             for (int x = 0; x < largura; x++) {
-
                 mvwaddch(win, y, x, map[y][x]);
             }
         }

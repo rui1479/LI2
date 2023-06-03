@@ -36,8 +36,6 @@
   "C_Cpp_Runner.useAddressSanitizer": false,
   "C_Cpp_Runner.showCompilationTime": false,
   "files.associations": {
-    "time.h": "c",
-    "stdlib.h": "c",
-    "*.tcc": "c"
+    "ncurses.h": "c"
   }
 }
