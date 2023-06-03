@@ -3,6 +3,8 @@
 #include <time.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
+
 
 #define MAP_WIDTH 203
 #define MAP_HEIGHT 48
@@ -57,7 +59,6 @@ const short c_player = 5;
 const short c_bullet = 6;
 const short c_enemy = 7;
 const short c_box = 8;
-const short c_hud = 9;
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////
 // HUB
@@ -214,7 +215,8 @@ void player_move(int key)
     player.x += player.hsp;
     player.y += player.vsp;
 
-    for (int i = 0; i < sizeof(enemy) / sizeof(enemy[0]); i++) {
+    for (int i = 0; i < (int)(sizeof(enemy) / sizeof(enemy[0])); i++)
+{
         enemy[i].lastKnownPlayerX = player.x;
         enemy[i].lastKnownPlayerY = player.y;
     }
@@ -236,7 +238,8 @@ void player_collision(short current_lvl[][arr_size_x])
     }
 
     // Enemy collision
-    for (short i = 0; i < sizeof(enemy) / sizeof(enemy[0]); i++)
+    for (short i = 0; i < (short)(sizeof(enemy) / sizeof(enemy[0])); i++)
+
     {
         if (player.y == enemy[i].y &&
             player.x == enemy[i].x)
@@ -250,255 +253,255 @@ void player_collision(short current_lvl[][arr_size_x])
 // OBJECT
 //////////////
 
-// Enemy movement
-void enemy_move(short current_lvl[][arr_size_x], int index)
-{
-    // Se o mob é estúpido
-    if (strcmp(enemy[index].symbol, "(e)") == 0)
-    {
-        // Dada a posição do jogador, ajuste a direção do mob estúpido para persegui-lo.
-        if (player.y > enemy[index].y)
-        {
-            enemy[index].vsp = 1;
-            enemy[index].y += enemy[index].vsp;
-        }
-        else if (player.y < enemy[index].y)
-        {
-            enemy[index].vsp = -1;
-            enemy[index].y += enemy[index].vsp;
-        }
-        else if (player.x > enemy[index].x)
-        {
-            enemy[index].hsp = 1;
-            enemy[index].x += enemy[index].hsp;
-        }
-        else if (player.x < enemy[index].x)
-        {
-            enemy[index].hsp = -1;
-            enemy[index].x += enemy[index].hsp;
-        }
-        return;
-    }
-    else if (strcmp(enemy[index].symbol, "(c)") == 0)
-    {
-        if (isPlayerNearby(index,5))
-        {
-            if (isAllyNearby(index))
-            {
-                // Ataque o jogador - simplificado para mover na direção do jogador
-                if (player.y > enemy[index].y)
-                {
-                    enemy[index].vsp = 1;
-                    enemy[index].y += enemy[index].vsp;
-                }
-                else if (player.y < enemy[index].y)
-                {
-                    enemy[index].vsp = -1;
-                    enemy[index].y += enemy[index].vsp;
-                }
-                else if (player.x > enemy[index].x)
-                {
-                    enemy[index].hsp = 1;
-                    enemy[index].x += enemy[index].hsp;
-                }
-                else if (player.x < enemy[index].x)
-                {
-                    enemy[index].hsp = -1;
-                    enemy[index].x += enemy[index].hsp;
-                }
-            }
-            else
-            {
-                // Grita e foge do jogador - simplificado para mover na direção oposta ao jogador
-                if (player.y > enemy[index].y)
-                {
-                    enemy[index].vsp = -1;
-                    enemy[index].y += enemy[index].vsp;
-                }
-                else if (player.y < enemy[index].y)
-                {
-                    enemy[index].vsp = 1;
-                    enemy[index].y += enemy[index].vsp;
-                }
-                else if (player.x > enemy[index].x)
-                {
-                    enemy[index].hsp = -1;
-                    enemy[index].x += enemy[index].hsp;
-                }
-                else if (player.x < enemy[index].x)
-                {
-                    enemy[index].hsp = 1;
-                    enemy[index].x += enemy[index].hsp;
-                }
-            }
-        }
-        else
-        {
-            if (isAllyNearby(index))
-            {
-                // Junta-se aos companheiros - simplificado para mover em direção ao aliado mais próximo
-                int closestAlly = -1;
-                for (int i = 0; i < sizeof(enemy) / sizeof(enemy[0]); i++)
-                {
-                    if (i != index && (closestAlly == -1 ||
-                                       abs(enemy[i].x - enemy[index].x) + abs(enemy[i].y - enemy[index].y) <
-                                           abs(enemy[closestAlly].x - enemy[index].x) + abs(enemy[closestAlly].y - enemy[index].y)))
-                    {
-                        closestAlly = i;
-                    }
-                }
-                if (closestAlly != -1)
-                {
-                    if (enemy[closestAlly].y > enemy[index].y)
-                    {
-                        enemy[index].vsp = 1;
-                        enemy[index].y += enemy[index].vsp;
-                    }
-                    else if (enemy[closestAlly].y < enemy[index].y)
-                    {
-                        enemy[index].vsp = -1;
-                        enemy[index].y += enemy[index].vsp;
-                    }
-                    else if (enemy[closestAlly].x > enemy[index].x)
-                    {
-                        enemy[index].hsp = 1;
-                        enemy[index].x += enemy[index].hsp;
-                    }
-                    else if (enemy[closestAlly].x < enemy[index].x)
-                    {
-                        enemy[index].hsp = -1;
-                        enemy[index].x += enemy[index].hsp;
-                    }
-                }
-            }
-            else
-            {
-                // Move-se aleatoriamente
-                int randomDirection = rand() % 4;
-                switch (randomDirection)
-                {
-                case 0:
-                    enemy[index].vsp = 1; // move para baixo
-                    break;
-                case 1:
-                    enemy[index].vsp = -1; // move para cima
-                    break;
-                case 2:
-                    enemy[index].hsp = 1; // move para a direita
-                    break;
-                case 3:
-                    enemy[index].hsp = -1; // move para a esquerda
-                    break;
-                }
-                enemy[index].x += enemy[index].hsp;
-                enemy[index].y += enemy[index].vsp;
-            }
-        }
-        return;
-    }
-    else if (strcmp(enemy[index].symbol, "(i)" == 0))
-    {
-        if (strcmp(enemy[index].symbol, "smart") == 0)
-        {
-            // Se o jogador está próximo
-            if (isPlayerNearby(index, 10))
-            {
-                // Se o mob está perto o suficiente para atacar com uma bomba
-                if (isPlayerNearby(index, 3))
-                {
-                    // Use uma bomba
-                    useBomb(index);
-                }
-                else
-                {
-                    // Mover na direção do jogador para atacar
-                    findDirection(enemy[index].x, enemy[index].y, player.x, player.y, &enemy[index].hsp, &enemy[index].vsp);
-                    enemy[index].x += enemy[index].hsp;
-                    enemy[index].y += enemy[index].vsp;
-                }
-            }
-            else
-            {
-                // Se não há jogador próximo, mover na direção da última posição conhecida do jogador
-                findDirection(enemy[index].x, enemy[index].y, enemy[index].lastKnownPlayerX, enemy[index].lastKnownPlayerY, &enemy[index].hsp, &enemy[index].vsp);
-                enemy[index].x += enemy[index].hsp;
-                enemy[index].y += enemy[index].vsp;
-            }
-            return;
-        }
-    }
-}
+// // Enemy movement
+// void enemy_move(short current_lvl[][arr_size_x], int index)
+// {
+//     // Se o mob é estúpido
+//     if (strcmp(enemy[index].symbol, "(e)") == 0)
+//     {
+//         // Dada a posição do jogador, ajuste a direção do mob estúpido para persegui-lo.
+//         if (player.y > enemy[index].y)
+//         {
+//             enemy[index].vsp = 1;
+//             enemy[index].y += enemy[index].vsp;
+//         }
+//         else if (player.y < enemy[index].y)
+//         {
+//             enemy[index].vsp = -1;
+//             enemy[index].y += enemy[index].vsp;
+//         }
+//         else if (player.x > enemy[index].x)
+//         {
+//             enemy[index].hsp = 1;
+//             enemy[index].x += enemy[index].hsp;
+//         }
+//         else if (player.x < enemy[index].x)
+//         {
+//             enemy[index].hsp = -1;
+//             enemy[index].x += enemy[index].hsp;
+//         }
+//         return;
+//     }
+//     else if (strcmp(enemy[index].symbol, "(c)") == 0)
+//     {
+//         if (isPlayerNearby(index,5))
+//         {
+//             if (isAllyNearby(index))
+//             {
+//                 // Ataque o jogador - simplificado para mover na direção do jogador
+//                 if (player.y > enemy[index].y)
+//                 {
+//                     enemy[index].vsp = 1;
+//                     enemy[index].y += enemy[index].vsp;
+//                 }
+//                 else if (player.y < enemy[index].y)
+//                 {
+//                     enemy[index].vsp = -1;
+//                     enemy[index].y += enemy[index].vsp;
+//                 }
+//                 else if (player.x > enemy[index].x)
+//                 {
+//                     enemy[index].hsp = 1;
+//                     enemy[index].x += enemy[index].hsp;
+//                 }
+//                 else if (player.x < enemy[index].x)
+//                 {
+//                     enemy[index].hsp = -1;
+//                     enemy[index].x += enemy[index].hsp;
+//                 }
+//             }
+//             else
+//             {
+//                 // Grita e foge do jogador - simplificado para mover na direção oposta ao jogador
+//                 if (player.y > enemy[index].y)
+//                 {
+//                     enemy[index].vsp = -1;
+//                     enemy[index].y += enemy[index].vsp;
+//                 }
+//                 else if (player.y < enemy[index].y)
+//                 {
+//                     enemy[index].vsp = 1;
+//                     enemy[index].y += enemy[index].vsp;
+//                 }
+//                 else if (player.x > enemy[index].x)
+//                 {
+//                     enemy[index].hsp = -1;
+//                     enemy[index].x += enemy[index].hsp;
+//                 }
+//                 else if (player.x < enemy[index].x)
+//                 {
+//                     enemy[index].hsp = 1;
+//                     enemy[index].x += enemy[index].hsp;
+//                 }
+//             }
+//         }
+//         else
+//         {
+//             if (isAllyNearby(index))
+//             {
+//                 // Junta-se aos companheiros - simplificado para mover em direção ao aliado mais próximo
+//                 int closestAlly = -1;
+//                 for (int i = 0; i < sizeof(enemy) / sizeof(enemy[0]); i++)
+//                 {
+//                     if (i != index && (closestAlly == -1 ||
+//                                        abs(enemy[i].x - enemy[index].x) + abs(enemy[i].y - enemy[index].y) <
+//                                            abs(enemy[closestAlly].x - enemy[index].x) + abs(enemy[closestAlly].y - enemy[index].y)))
+//                     {
+//                         closestAlly = i;
+//                     }
+//                 }
+//                 if (closestAlly != -1)
+//                 {
+//                     if (enemy[closestAlly].y > enemy[index].y)
+//                     {
+//                         enemy[index].vsp = 1;
+//                         enemy[index].y += enemy[index].vsp;
+//                     }
+//                     else if (enemy[closestAlly].y < enemy[index].y)
+//                     {
+//                         enemy[index].vsp = -1;
+//                         enemy[index].y += enemy[index].vsp;
+//                     }
+//                     else if (enemy[closestAlly].x > enemy[index].x)
+//                     {
+//                         enemy[index].hsp = 1;
+//                         enemy[index].x += enemy[index].hsp;
+//                     }
+//                     else if (enemy[closestAlly].x < enemy[index].x)
+//                     {
+//                         enemy[index].hsp = -1;
+//                         enemy[index].x += enemy[index].hsp;
+//                     }
+//                 }
+//             }
+//             else
+//             {
+//                 // Move-se aleatoriamente
+//                 int randomDirection = rand() % 4;
+//                 switch (randomDirection)
+//                 {
+//                 case 0:
+//                     enemy[index].vsp = 1; // move para baixo
+//                     break;
+//                 case 1:
+//                     enemy[index].vsp = -1; // move para cima
+//                     break;
+//                 case 2:
+//                     enemy[index].hsp = 1; // move para a direita
+//                     break;
+//                 case 3:
+//                     enemy[index].hsp = -1; // move para a esquerda
+//                     break;
+//                 }
+//                 enemy[index].x += enemy[index].hsp;
+//                 enemy[index].y += enemy[index].vsp;
+//             }
+//         }
+//         return;
+//     }
+//     else if (strcmp(enemy[index].symbol, "(i)" == 0))
+//     {
+//         if (strcmp(enemy[index].symbol, "smart") == 0)
+//         {
+//             // Se o jogador está próximo
+//             if (isPlayerNearby(index, 10))
+//             {
+//                 // Se o mob está perto o suficiente para atacar com uma bomba
+//                 if (isPlayerNearby(index, 3))
+//                 {
+//                     // Use uma bomba
+//                     useBomb(index);
+//                 }
+//                 else
+//                 {
+//                     // Mover na direção do jogador para atacar
+//                     findDirection(enemy[index].x, enemy[index].y, player.x, player.y, &enemy[index].hsp, &enemy[index].vsp);
+//                     enemy[index].x += enemy[index].hsp;
+//                     enemy[index].y += enemy[index].vsp;
+//                 }
+//             }
+//             else
+//             {
+//                 // Se não há jogador próximo, mover na direção da última posição conhecida do jogador
+//                 findDirection(enemy[index].x, enemy[index].y, enemy[index].lastKnownPlayerX, enemy[index].lastKnownPlayerY, &enemy[index].hsp, &enemy[index].vsp);
+//                 enemy[index].x += enemy[index].hsp;
+//                 enemy[index].y += enemy[index].vsp;
+//             }
+//             return;
+//         }
+//     }
+// }
 
-// Função para verificar se o jogador está próximo
-bool isPlayerNearby(int index, int range) {
-    // Este é apenas um exemplo. Substitua por sua própria lógica.
-    return abs(enemy[index].x - player.x) <= range && abs(enemy[index].y - player.y) <= range;
-}
+// // Função para verificar se o jogador está próximo
+// bool isPlayerNearby(int index, int range) {
+//     // Este é apenas um exemplo. Substitua por sua própria lógica.
+//     return abs(enemy[index].x - player.x) <= range && abs(enemy[index].y - player.y) <= range;
+// }
 
 
-// Função para verificar se um aliado está próximo
-bool isAllyNearby(int index)
-{
-    // Este é apenas um exemplo. Substitua por sua própria lógica.
-    for (int i = 0; i < sizeof(enemy) / sizeof(enemy[0]); i++)
-    {
-        if (i != index && abs(enemy[i].x - enemy[index].x) <= 5 && abs(enemy[i].y - enemy[index].y) <= 5)
-        {
-            return true;
-        }
-    }
-    return false;
-}
+// // Função para verificar se um aliado está próximo
+// bool isAllyNearby(int index)
+// {
+//     // Este é apenas um exemplo. Substitua por sua própria lógica.
+//     for (int i = 0; i < sizeof(enemy) / sizeof(enemy[0]); i++)
+//     {
+//         if (i != index && abs(enemy[i].x - enemy[index].x) <= 5 && abs(enemy[i].y - enemy[index].y) <= 5)
+//         {
+//             return true;
+//         }
+//     }
+//     return false;
+// }
 
-// Encontrar a direção para mover de um ponto a outro
-void findDirection(int startX, int startY, int endX, int endY, int *hsp, int *vsp)
-{
-    if (endY > startY)
-    {
-        *vsp = 1;
-    }
-    else if (endY < startY)
-    {
-        *vsp = -1;
-    }
-    else if (endX > startX)
-    {
-        *hsp = 1;
-    }
-    else if (endX < startX)
-    {
-        *hsp = -1;
-    }
-}
+// // Encontrar a direção para mover de um ponto a outro
+// void findDirection(int startX, int startY, int endX, int endY, int *hsp, int *vsp)
+// {
+//     if (endY > startY)
+//     {
+//         *vsp = 1;
+//     }
+//     else if (endY < startY)
+//     {
+//         *vsp = -1;
+//     }
+//     else if (endX > startX)
+//     {
+//         *hsp = 1;
+//     }
+//     else if (endX < startX)
+//     {
+//         *hsp = -1;
+//     }
+// }
 
-// Enemy update
-void enemy_update(short current_lvl[][arr_size_x])
-{
-    for (int i = 0; i < sizeof(enemy) / sizeof(enemy[0]); i++)
-    {
-        enemy_move(current_lvl, i);
-    }
-}
+// // Enemy update
+// void enemy_update(short current_lvl[][arr_size_x])
+// {
+//     for (int i = 0; i < sizeof(enemy) / sizeof(enemy[0]); i++)
+//     {
+//         enemy_move(current_lvl, i);
+//     }
+// }
 
-// Enemy clear
-void clear_enemy()
-{
-    for (int i = 0; i < sizeof(enemy) / sizeof(enemy[0]); i++)
-    {
-        enemy[i].y = 0;
-        enemy[i].x = 0;
-        enemy[i].direction = 0;
-    }
-}
+// // Enemy clear
+// void clear_enemy()
+// {
+//     for (int i = 0; i < sizeof(enemy) / sizeof(enemy[0]); i++)
+//     {
+//         enemy[i].y = 0;
+//         enemy[i].x = 0;
+//         enemy[i].direction = 0;
+//     }
+// }
 
-// set obj Parametrs
-void obj_init(struct class_obj *obj, int x, int y, int dir, char *objname)
-{
-    obj->x = x;
-    obj->y = y;
-    obj->direction = dir;
-    strcpy(obj->symbol, objname);
-}
+// // set obj Parametrs
+// void obj_init(struct class_obj *obj, int x, int y, int dir, char *objname)
+// {
+//     obj->x = x;
+//     obj->y = y;
+//     obj->direction = dir;
+//     strcpy(obj->symbol, objname);
+// }
 
 /////////////////////////////////////////////////////////////////////////
 ///////////////
@@ -606,11 +609,7 @@ int main()
     timeout(0);
     leaveok(stdscr, TRUE);
     curs_set(0);
-char** map = (char**)malloc(MAP_HEIGHT * sizeof(char*));
-        for (int i = 0; i < MAP_HEIGHT; i++) {
-        map[i] = (char*)malloc(MAP_WIDTH * sizeof(char));
-        memset(map[i], ' ', MAP_WIDTH); // Preenche a linha com espaços em branco
-        }
+
 
     // Enumera os estados do jogo
     typedef enum
@@ -638,7 +637,7 @@ char** map = (char**)malloc(MAP_HEIGHT * sizeof(char*));
     {
 
         // Cor
-        SetColor();
+        //SetColor();
 
         // Calcula altura e largura da janela
         getmaxyx(stdscr, altura, largura);
@@ -690,8 +689,101 @@ char** map = (char**)malloc(MAP_HEIGHT * sizeof(char*));
         // Jogo
         case ESTADO_GAME:
 
-            generateMap(MAP_WIDTH, MAP_HEIGHT, map);
-            printMap(MAP_WIDTH, MAP_HEIGHT, map);
+            // Cria uma nova janela
+    WINDOW *win;
+    win = newwin(altura, largura, 0, 0);
+
+    // Habilita o uso de teclas especiais (como as setas do teclado)
+    keypad(win, TRUE);
+
+    // Oculta a exibição do cursor
+    curs_set(0);
+
+    // Configura as cores para usar o padrão do terminal
+    start_color();
+    use_default_colors();
+
+    // Define as cores para a parede e o jogador
+    init_pair(1, COLOR_WHITE, -1);   // Padrão (parede)
+    init_pair(2, COLOR_YELLOW, -1); // Jogador
+
+    char **map = (char **)malloc(altura * sizeof(char *));
+    for (int i = 0; i < altura; i++) {
+        map[i] = (char *)malloc(largura * sizeof(char));
+        memset(map[i], ' ', largura); // Preenche a linha com espaços em branco
+    }
+    addBorder(largura, altura, map);
+    generateMap(largura, altura, map);
+
+    int playerX = largura / 2;
+    int playerY = altura / 2;
+
+    char c;
+    do {
+        // Limpa a janela
+        werase(win);
+
+        // Desenha o mapa na janela
+        for (int i = 0; i < altura; i++) {
+            for (int j = 0; j < largura; j++) {
+                if (map[i][j] == '#') {
+                    wattron(win, COLOR_PAIR(1));
+                } else {
+                    wattron(win, COLOR_PAIR(2));
+                }
+                mvwprintw(win, i, j, "%c", map[i][j]);
+                wattroff(win, COLOR_PAIR(1));
+                wattroff(win, COLOR_PAIR(2));
+            }
+        }
+
+
+        // Desenha o jogador na posição atual
+        wattron(win, COLOR_PAIR(2));
+        mvwprintw(win, playerY, playerX, "@");
+        wattroff(win, COLOR_PAIR(2));
+
+        // Atualiza a janela
+        wrefresh(win);
+
+        // Espera pela entrada do usuário
+        c = wgetch(win);
+
+        // Limpa a posição atual do jogador no mapa
+        map[playerY][playerX] = ' ';
+
+        // Atualiza a posição do jogador com base na entrada do usuário
+        switch (c) {
+        case 'w':
+            if (playerY > 2 && map[playerY - 1][playerX] != '#') {
+                playerY--;
+            }
+            break;
+        case 's':
+            if (playerY < MAP_HEIGHT - 3 && map[playerY + 1][playerX] != '#') {
+                playerY++;
+            }
+            break;
+        case 'a':
+            if (playerX > 2 && map[playerY][playerX - 1] != '#') {
+                playerX--;
+            }
+            break;
+        case 'd':
+            if (playerX < MAP_WIDTH - 3 && map[playerY][playerX + 1] != '#') {
+                playerX++;
+            }
+            break;
+        case 'p':
+            updateMap(MAP_WIDTH, MAP_HEIGHT, map);
+        default:
+            break;
+        }
+
+        // Atualiza a posição atual do jogador no mapa
+        map[playerY][playerX] = '@';
+
+    } while (c != 'q');
             desenha_hud();
             box(stdscr, 0, 0);
             break;
