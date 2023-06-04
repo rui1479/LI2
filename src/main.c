@@ -6,8 +6,8 @@
 #include <string.h>
 
 
-#define MAP_WIDTH 134
-#define MAP_HEIGHT 35
+#define MAP_WIDTH largura
+#define MAP_HEIGHT altura
 #define space 32
 #define enter 10
 #define MAP_RADIUS 5
@@ -443,8 +443,11 @@ int main()
         // Jogo
         case ESTADO_GAME:
 
+
             // Cria uma nova janela
     WINDOW *win = newwin(MAP_HEIGHT, MAP_WIDTH, 0, 0);
+
+
 
     // Habilita o uso de teclas especiais (como as setas do teclado)
     keypad(win, TRUE);
