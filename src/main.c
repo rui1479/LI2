@@ -254,6 +254,36 @@ void player_collision(short current_lvl[][arr_size_x])
 // OBJECT
 //////////////
 
+void desenhaMobs(char **map, WINDOW *win)
+{
+    int largura = getmaxx(win);
+    int altura = getmaxy(win);
+    for (int y = 0; y < altura; y++) {
+            for (int x = 0; x < largura; x++) {
+                if (map[y][x] == 'e'||map[y][x] == 'b' || map[y][x] == 'c')
+                mvwaddch(win, y, x, map[y][x]);
+            }
+        }
+}
+
+void spawnMob(int playerX, int playerY, char **map, WINDOW *win)
+{
+    int mobX, mobY;
+    do {
+        mobX = rand() % (MAP_WIDTH - 4) + 2;
+        mobY = rand() % (MAP_HEIGHT - 4) + 2;
+    } while (map[mobY][mobX] != '.' || (abs(mobX - playerX) <= MAP_RADIUS && abs(mobY - playerY) <= MAP_RADIUS));
+    int value = rand() % 3 + 1;
+        switch (value) 
+        {   case 1 : map[mobY][mobX] = 'e'; mvwaddch(win, mobY, mobX, 'e');break;
+            case 2 : map[mobY][mobX] = 'b'; mvwaddch(win, mobY, mobX, 'b');break;
+            case 3 : map[mobY][mobX] = 'c'; mvwaddch(win, mobY, mobX, 'c');break;
+            default : break;
+        }
+
+}
+
+
 // // Enemy movement
 // void enemy_move(short current_lvl[][arr_size_x], int index)
 // {
@@ -726,8 +756,7 @@ int main()
         case ESTADO_GAME:
 
             // Cria uma nova janela
-    WINDOW *win;
-    win = newwin(altura, largura, 0, 0);
+    WINDOW *win = newwin(MAP_HEIGHT, MAP_WIDTH, 0, 0);
 
     // Habilita o uso de teclas especiais (como as setas do teclado)
     keypad(win, TRUE);
@@ -740,75 +769,86 @@ int main()
     use_default_colors();
 
     // Define as cores para a parede e o jogador
-    init_pair(1, COLOR_WHITE, -1);   // Padrão (parede)
-    init_pair(2, COLOR_YELLOW, -1); // Jogador
+    init_pair(1, COLOR_WHITE, -1);     // Padrão (parede)
+    init_pair(2, COLOR_YELLOW, -1);    // Jogador
+    init_pair(3, COLOR_RED, -1);       // Mobs 
 
-    char **map = (char **)malloc(altura * sizeof(char *));
-    for (int i = 0; i < altura; i++) {
-        map[i] = (char *)malloc(largura * sizeof(char));
-        memset(map[i], '.', largura); // Preenche a linha com espaços em branco
+    char **map = (char **)malloc(MAP_HEIGHT * sizeof(char *));
+    for (int i = 0; i < MAP_HEIGHT; i++) {
+        map[i] = (char *)malloc(MAP_WIDTH * sizeof(char));
+        memset(map[i], '.', MAP_WIDTH); // Preenche a linha com pontos
     }
-    addBorder(largura, altura, map);
-    generateMap(largura, altura, map);
+    addBorder(MAP_WIDTH, MAP_HEIGHT, map);
+    generateMap(MAP_WIDTH, MAP_HEIGHT, map);
 
-    int playerX = largura / 2;
-    int playerY = altura / 2;
-    int visaoAtivada = 1;
+    int playerX = MAP_WIDTH / 2;
+    int playerY = MAP_HEIGHT / 2;
+    int visaoAtivada = 0;
+    int move_Count = 5;
 
-    char c;
+    int c;
     do {
         // Limpa a janela
         werase(win);
-
-        // Desenha o mapa na janela
         wattron(win, COLOR_PAIR(1));
+        // Desenha a visão do jogador
         desenhaVisao(playerX, playerY, map, win, visaoAtivada);
         wattroff(win, COLOR_PAIR(1));
         // Desenha o jogador na posição atual
         wattron(win, COLOR_PAIR(2));
         mvwprintw(win, playerY, playerX, "@");
         wattroff(win, COLOR_PAIR(2));
+        if (move_Count == 5)
+        {   
+            spawnMob(playerX, playerY, map, win);
+            move_Count = 0;    
+        }
+        wattron(win, COLOR_PAIR(3));
+        desenhaMobs(map, win);
+        wattroff(win, COLOR_PAIR(3));
 
         // Atualiza a janela
         wrefresh(win);
 
         // Espera pela entrada do usuário
         c = wgetch(win);
-
         // Limpa a posição atual do jogador no mapa
         map[playerY][playerX] = '.';
-
         // Atualiza a posição do jogador com base na entrada do usuário
         switch (c) {
-        case 'w':
-            if (playerY > 2 && map[playerY - 1][playerX] != '#') {
-                playerY--;
-            }
-            break;
-        case 's':
-            if (playerY < altura - 3 && map[playerY + 1][playerX] != '#') {
-                playerY++;
-            }
-            break;
-        case 'a':
-            if (playerX > 2 && map[playerY][playerX - 1] != '#') {
-                playerX--;
-            }
-            break;
-        case 'd':
-            if (playerX < largura - 3 && map[playerY][playerX + 1] != '#') {
-                playerX++;
-            }
-            break;
-        case 'p':
-            updateMap(largura, altura, map); break;
-        case 't':
-            visaoAtivada = !visaoAtivada;
-            break;
-        default:
-            break;
+    case KEY_UP:
+        if (playerY > 2 && map[playerY - 1][playerX] != '#') {
+            playerY--;
+            move_Count++;
         }
-
+        break;
+    case KEY_DOWN:
+        if (playerY < MAP_HEIGHT - 3 && map[playerY + 1][playerX] != '#') {
+            playerY++;
+            move_Count++;
+        }
+        break;
+    case KEY_LEFT:
+        if (playerX > 2 && map[playerY][playerX - 1] != '#') {
+            playerX--;
+            move_Count++;
+        }
+        break;
+    case KEY_RIGHT:
+        if (playerX < MAP_WIDTH - 3 && map[playerY][playerX + 1] != '#') {
+            playerX++;
+            move_Count++;
+        }
+        break;
+    case 'p':
+        updateMap(MAP_WIDTH, MAP_HEIGHT, map);
+        break;
+    case 't':
+        visaoAtivada = !visaoAtivada;
+        break;
+    default:
+        break;
+}
         // Atualiza a posição atual do jogador no mapa
         map[playerY][playerX] = '@';
 
