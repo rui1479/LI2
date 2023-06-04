@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <limits.h>
 
 
 #define MAP_WIDTH largura
@@ -22,18 +23,13 @@ short arr_size_x;
 #define s_enemy_I "(i)"
 #define s_enemy_E "(e)"
 
-struct class_obj
-{
+struct class_obj {
     char symbol[20];
-    int hsp, vsp;
     int x, y;
     int direction;
-    int lastKnownPlayerX, lastKnownPlayerY;
-
 };
-
 struct class_obj player;
-struct class_obj enemy[5];
+struct class_obj mob;
 
 const short c_hud = 2;
 bool EXIT = false;
@@ -156,40 +152,99 @@ void desenha_logo(int largura)
 /////////////
 // PLAYER
 ////////////
-int dir_x;
-int dir_y;
-int dir_shoot;
+void init_player(struct class_obj *player, int x, int y, int dir, char *symbol) {
+    player->x = x;
+    player->y = y;
+    player->direction = dir;
+    strcpy(player->symbol, symbol);
+}
+
 
 // Collsiion
-void player_collision(short current_lvl[][arr_size_x])
-{
-    switch (current_lvl[player.y][player.x])
-    {
 
-    // Collision
-    case i_wall:  // wall
-    case i_door:  // door
-    case i_space: // space
-        player.x -= player.hsp;
-        player.y -= player.vsp;
-        break;
-    }
-
-    // Enemy collision
-    for (short i = 0; i < (short)(sizeof(enemy) / sizeof(enemy[0])); i++)
-
-    {
-        if (player.y == enemy[i].y &&
-            player.x == enemy[i].x)
-        {
-            lifes = lifes - 1;
-        }
-    }
-}
 
 //////////////
 // OBJECT
 //////////////
+
+
+
+void init_mob(struct class_obj *mob, char **map, struct class_obj * player)
+    {
+        int mobX, mobY;
+    do {
+        mobX = rand() % (MAP_WIDTH - 4) + 2;
+        mobY = rand() % (MAP_HEIGHT - 4) + 2;
+    } while (map[mobY][mobX] != '.' || (abs(mobX - player->x) <= MAP_RADIUS && abs(mobY - player->y) <= MAP_RADIUS));
+        int value = rand() % 3 + 1;
+        switch (value) 
+        {   case 1 : map[mobY][mobX] = 'e';*mob -> symbol = 'e';break;
+            case 2 : map[mobY][mobX] = 'b';*mob -> symbol = 'b';break;
+            case 3 : map[mobY][mobX] = 'c';*mob -> symbol = 'c';break;
+            default : break;
+        }
+    }
+
+int calculaDistancia(struct class_obj *obj, int x, int y) {
+    int distX = abs(obj->x - x);
+    int distY = abs(obj->y - y);
+    return distX + distY;
+}
+
+void moveMob(struct class_obj *player, char **map, int mobx, int moby) {
+    int closestDist = INT_MAX;
+    int closestX = -1;
+    int closestY = -1;
+    char temp = map[moby][mobx];
+    // Coordenadas das posições acima, abaixo, à esquerda e à direita
+    int positions[][2] = {
+        {moby - 1, mobx},  // Acima
+        {moby + 1, mobx},  // Abaixo
+        {moby, mobx - 1},  // Esquerda
+        {moby, mobx + 1}   // Direita
+    };
+
+    // Percorre as posições adjacentes ao mob
+    for (int i = 0; i < 4; i++) {
+        int y = positions[i][0];
+        int x = positions[i][1];
+
+        // Verifica se a posição é válida e se está vazia
+        if (y >= 0 && y < MAP_HEIGHT && x >= 0 && x < MAP_WIDTH && map[y][x] == '.') {
+            // Calcula a distância apenas para movimentos horizontais ou verticais
+            if (y == moby || x == mobx) {
+                int dist = calculaDistancia(player, x, y);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closestX = x;
+                    closestY = y;
+                }
+            }
+        }
+    }
+
+    // Move o mob para a posição mais próxima do jogador
+    if (closestX != -1 && closestY != -1) {
+        map[moby][mobx] = '.';  // Remove o mob da posição atual
+        mobx = closestX;  // Atualiza as coordenadas x e y do mob
+        moby = closestY;
+        map[moby][mobx] = map[moby][mobx];
+        map[moby][mobx] = temp;  // Coloca o mob na nova posição
+    }
+}
+
+
+void moveAllMobs(struct class_obj *player, char **map, WINDOW *win)
+{
+    for (int y = 0; y < MAP_HEIGHT; y++)
+        {
+            for (int x = 0; x < MAP_WIDTH; x++)
+                {
+                   if (map[y][x] == 'b'|| map[y][x] == 'c' || map[y][x] == 'e'){
+                    moveMob(player,map,x,y);}
+                }
+        }
+}
 
 void desenhaMobs(char **map, WINDOW *win)
 {
@@ -203,32 +258,12 @@ void desenhaMobs(char **map, WINDOW *win)
         }
 }
 
-void spawnMob(int playerX, int playerY, char **map, WINDOW *win)
-{
-    int mobX, mobY;
-    do {
-        mobX = rand() % (MAP_WIDTH - 4) + 2;
-        mobY = rand() % (MAP_HEIGHT - 4) + 2;
-    } while (map[mobY][mobX] != '.' || (abs(mobX - playerX) <= MAP_RADIUS && abs(mobY - playerY) <= MAP_RADIUS));
-    int value = rand() % 3 + 1;
-        switch (value) 
-        {   case 1 : map[mobY][mobX] = 'e'; mvwaddch(win, mobY, mobX, 'e');break;
-            case 2 : map[mobY][mobX] = 'b'; mvwaddch(win, mobY, mobX, 'b');break;
-            case 3 : map[mobY][mobX] = 'c'; mvwaddch(win, mobY, mobX, 'c');break;
-            default : break;
-        }
-
-}
-
-
-
 /////////////////////////////////////////////////////////////////////////
 ///////////////
 // MAPA
 //////////////
 
-void addBorder(int width, int height, char **map)
-{
+void addBorder(int width, int height, char **map) {
     for (int i = 0; i < width; i++) {
         map[0][i] = '#';
         map[1][i] = '#';
@@ -245,13 +280,12 @@ void addBorder(int width, int height, char **map)
     }
 }
 
-void generateMap(int width, int height, char **map)
-{   // Preenchimento do restante do mapa com paredes probabilísticas
-    srand(time(NULL)); // Inicialização do gerador de números aleatórios
+void generateMap(int width, int height, char **map) {
+    // Preenchimento do restante do mapa com paredes probabilísticas
+    srand(time(NULL));  // Inicialização do gerador de números aleatórios
     for (int i = 2; i < height - 2; i++) {
         for (int j = 2; j < width - 2; j++) {
-            int randomValue = rand() % 101; // Gera um número aleatório entre 0 e 100
-
+            int randomValue = rand() % 101;  // Gera um número aleatório entre 0 e 100
             if (randomValue <= 40) {
                 map[i][j] = '#';
             }
@@ -259,26 +293,17 @@ void generateMap(int width, int height, char **map)
     }
 }
 
-void printMap(int width, int height, char **map)
-{
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            printf("%c", map[i][j]);
-        }
-        printf("\n");
-    }
-}
 
-void updateMap(int width, int height, char **map)
-{
+void updateMap(int width, int height, char **map) {
     char **tempMap = (char **)malloc(height * sizeof(char *));
     for (int i = 0; i < height; i++) {
         tempMap[i] = (char *)malloc(width * sizeof(char));
-        memcpy(tempMap[i], map[i], width); // Copia o mapa original para o mapa temporário
+        memcpy(tempMap[i], map[i], width);  // Copia o mapa original para o mapa temporário
     }
 
     for (int i = 2; i < height - 2; i++) {
         for (int j = 2; j < width - 2; j++) {
+            if (map[i][j] != 'b'&& map[i][j] != 'c' && map[i][j]!= 'e') {
             // Verifica as 9 células ao redor
             int count = 0;
             for (int k = i - 1; k <= i + 1; k++) {
@@ -296,7 +321,7 @@ void updateMap(int width, int height, char **map)
             }
         }
     }
-
+    }
     // Copia o mapa atualizado de volta para o mapa original
     for (int i = 2; i < height - 2; i++) {
         for (int j = 2; j < width - 2; j++) {
@@ -317,11 +342,13 @@ bool verificaParedeNaDirecao(int playerX, int playerY, double x, double y, char 
             mvwaddch(win, y, x, map[(int)y][(int)x]);
             return false;
         }
+        if (map[(int)y][(int)x] == 'e'|| map[(int)y][(int)x] == 'b'|| map[(int)y][(int)x] == 'c')
+        return false;
     }
     mvwaddch(win, y, x, map[(int)y][(int)x]);return true;
 }
 
-void desenhaVisao(int playerX, int playerY, char **map, WINDOW *win, int visaoAtivada) {
+void desenhaVisao(struct class_obj *player, char **map, WINDOW *win, int visaoAtivada) {
     int largura = getmaxx(win);
     int altura = getmaxy(win);
 
@@ -329,9 +356,10 @@ void desenhaVisao(int playerX, int playerY, char **map, WINDOW *win, int visaoAt
         double anguloIncremento = M_PI / 64.0;
         for (double angulo = 0; angulo < 2.0 * M_PI; angulo += anguloIncremento) {
             for (int i = 1; i < MAP_RADIUS; i++) {
-                double x = playerX + i * cos(angulo);
-                double y = playerY + i * sin(angulo);
-                if (verificaParedeNaDirecao(playerX, playerY, x, y, map, win)) {
+                double x = player->x + i * cos(angulo);
+                double y = player->y + i * sin(angulo);
+                if (verificaParedeNaDirecao(player->x, player->y, x, y, map, win)) {
+                    if(map[(int)y][(int)x] != 'e'&& map[(int)y][(int)x] != 'b'&& map[(int)y][(int)x] != 'c') 
                     mvwaddch(win, y, x, map[(int)y][(int)x]);
                 } else {
                     break;
@@ -341,11 +369,13 @@ void desenhaVisao(int playerX, int playerY, char **map, WINDOW *win, int visaoAt
     } else {
         for (int y = 0; y < altura; y++) {
             for (int x = 0; x < largura; x++) {
+                if(map[(int)y][(int)x] != 'e'&& map[(int)y][(int)x] != 'b'&& map[(int)y][(int)x] != 'c')
                 mvwaddch(win, y, x, map[y][x]);
             }
         }
     }
 }
+
 
 /////////////////////////////////////////////////////////////////////////
 ///////////////
@@ -447,8 +477,6 @@ int main()
             // Cria uma nova janela
     WINDOW *win = newwin(MAP_HEIGHT, MAP_WIDTH, 0, 0);
 
-
-
     // Habilita o uso de teclas especiais (como as setas do teclado)
     keypad(win, TRUE);
 
@@ -471,32 +499,33 @@ int main()
     }
     addBorder(MAP_WIDTH, MAP_HEIGHT, map);
     generateMap(MAP_WIDTH, MAP_HEIGHT, map);
-
-    int playerX = MAP_WIDTH / 2;
-    int playerY = MAP_HEIGHT / 2;
-    int visaoAtivada = 0;
-    int move_Count = 5;
+    init_player(&player, MAP_WIDTH / 2,MAP_HEIGHT / 2, 1,"@");
+    int visaoAtivada = 1;
+    int move_Count = 4;
 
     int c;
     do {
         // Limpa a janela
         werase(win);
         wattron(win, COLOR_PAIR(1));
+        
+        wattron(win, COLOR_PAIR(3));
+        moveAllMobs(&player, map, win);
+        desenhaMobs(map, win);
+        wattroff(win, COLOR_PAIR(3));
+        
         // Desenha a visão do jogador
-        desenhaVisao(playerX, playerY, map, win, visaoAtivada);
+        desenhaVisao(&player, map, win, visaoAtivada);
         wattroff(win, COLOR_PAIR(1));
         // Desenha o jogador na posição atual
         wattron(win, COLOR_PAIR(2));
-        mvwprintw(win, playerY, playerX, "@");
+        mvwprintw(win, player.y, player.x, "@");
         wattroff(win, COLOR_PAIR(2));
         if (move_Count == 5)
         {   
-            spawnMob(playerX, playerY, map, win);
+            init_mob(&mob, map, &player);
             move_Count = 0;    
         }
-        wattron(win, COLOR_PAIR(3));
-        desenhaMobs(map, win);
-        wattroff(win, COLOR_PAIR(3));
 
         // Atualiza a janela
         wrefresh(win);
@@ -504,31 +533,35 @@ int main()
         // Espera pela entrada do usuário
         c = wgetch(win);
         // Limpa a posição atual do jogador no mapa
-        map[playerY][playerX] = '.';
+        map[player.y][player.x] = '.';
         // Atualiza a posição do jogador com base na entrada do usuário
         switch (c) {
     case KEY_UP:
-        if (playerY > 2 && map[playerY - 1][playerX] != '#') {
-            playerY--;
+        if (player.y > 2 && map[player.y - 1][player.x] != '#') {
+            player.y--;
             move_Count++;
+            player.direction = 1;
         }
         break;
     case KEY_DOWN:
-        if (playerY < MAP_HEIGHT - 3 && map[playerY + 1][playerX] != '#') {
-            playerY++;
+        if (player.y < MAP_HEIGHT - 3 && map[player.y + 1][player.x] != '#') {
+            player.y++;
             move_Count++;
+            player.direction = 2;
         }
         break;
     case KEY_LEFT:
-        if (playerX > 2 && map[playerY][playerX - 1] != '#') {
-            playerX--;
+        if (player.x > 2 && map[player.y][player.x - 1] != '#') {
+            player.x--;
             move_Count++;
+            player.direction = 3;
         }
         break;
     case KEY_RIGHT:
-        if (playerX < MAP_WIDTH - 3 && map[playerY][playerX + 1] != '#') {
-            playerX++;
+        if (player.x < MAP_WIDTH - 3 && map[player.y][player.x + 1] != '#') {
+            player.x++;
             move_Count++;
+            player.direction = 4;
         }
         break;
     case 'p':
@@ -541,7 +574,7 @@ int main()
         break;
 }
         // Atualiza a posição atual do jogador no mapa
-        map[playerY][playerX] = '@';
+        map[player.y][player.x] = '@';
 
     } while (c != 'q');
             desenha_hud();
