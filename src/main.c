@@ -412,6 +412,23 @@ bool ataque_melee(int px, int py, int dir, char **map, WINDOW *win)
 ////////////////////
 // Mapa
 ///////////////////
+
+void limpa_mortos(char **mapa, WINDOW *win)
+{
+    for (int i = 0; i < MAP_HEIGHT; i++)
+    {
+        for (int j = 0; j < MAP_WIDTH; j++)
+        {
+            if (mapa[i][j] == '*')
+            {
+                mapa[i][j] = '.';
+                mvwaddch(win, i, j, '.'); // Atualiza a exibição na janela
+            }
+        }
+    }
+}
+
+
 void addBorder(int width, int height, char **map)
 {
     for (int i = 0; i < width; i++)
@@ -839,6 +856,8 @@ int main()
                         SDL_PauseAudioDevice(deviceId3, 0);
                     }
                     break;
+                case 'l':
+                    limpa_mortos(map, win);break;
                 case 'q':
                     endwin();
                     return 0;
