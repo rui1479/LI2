@@ -729,7 +729,7 @@ int main()
                 // Limpa a janela
                 werase(win);
                 wattron(win, COLOR_PAIR(1));
-                // moveAllMobs(&player, map, win);
+                moveAllMobs(&player, map);
                 desenhaMobs(map, win);
 
                 // Desenha a visão do jogador
