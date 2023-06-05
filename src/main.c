@@ -356,10 +356,6 @@ bool ataque_ranged(int px, int py, int dir, char **map, WINDOW *win)
     return false;
 }
 
-
-
-
-
 bool ataque_melee(int px, int py, int dir, char **map, WINDOW *win)
 {
     int playerX = px;
@@ -399,7 +395,7 @@ bool ataque_melee(int px, int py, int dir, char **map, WINDOW *win)
     }
     else if (targetBlock == 'b' || targetBlock == 'e' || targetBlock == 'c')
     {
-        map[targetY][targetX] = '.';
+        map[targetY][targetX] = '*';
         mvwaddch(win, targetY, targetX, map[targetY][targetX]);
         monstrosMortos++;
         return true;
