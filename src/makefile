@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -O2
-LIBS = -lncurses -lm
+LIBS = -lncurses -lm -lSDL2
 OBJS = main.o 
 
 jogo: $(OBJS)
