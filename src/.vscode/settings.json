@@ -36,6 +36,7 @@
   "C_Cpp_Runner.useAddressSanitizer": false,
   "C_Cpp_Runner.showCompilationTime": false,
   "files.associations": {
-    "ncurses.h": "c"
+    "ncurses.h": "c",
+    "sdl.h": "c"
   }
 }

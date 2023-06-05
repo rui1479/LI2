@@ -5,6 +5,8 @@
 #include <math.h>
 #include <string.h>
 #include <limits.h>
+#include <SDL2/SDL.h>
+
 
 
 #define MAP_WIDTH largura
@@ -35,7 +37,7 @@ const short c_hud = 2;
 bool EXIT = false;
 int tecla_pressionada = 0;
 
-short lifes = 1;
+short life = 1;
 
 // index map object
 #define i_wall 1
@@ -69,8 +71,7 @@ void game_over()
 }
 
 // HUD do jogo
-short hp = 100;
-short kills = 0;
+short mosntrosMortos = 0;
 short score = 0;
 
 int numero_mobs = 0;
@@ -78,7 +79,7 @@ int numero_mobs = 0;
 // Desenhar o HUD
 void desenha_hud()
 {
-    if (kills == 0)
+    if (mosntrosMortos == 0)
     {
         mvprintw(1, 2, "objetivo: %d%%   kills: %d   hp: %d\n", score, kills, hp);
         return;
@@ -160,8 +161,6 @@ void init_player(struct class_obj *player, int x, int y, int dir, char *symbol) 
 }
 
 
-// Collsiion
-
 
 //////////////
 // OBJECT
@@ -196,6 +195,7 @@ void moveMob(struct class_obj *player, char **map, int mobx, int moby) {
     int closestX = -1;
     int closestY = -1;
     char temp = map[moby][mobx];
+
     // Coordenadas das posições acima, abaixo, à esquerda e à direita
     int positions[][2] = {
         {moby - 1, mobx},  // Acima
@@ -228,11 +228,12 @@ void moveMob(struct class_obj *player, char **map, int mobx, int moby) {
         map[moby][mobx] = '.';  // Remove o mob da posição atual
         mobx = closestX;  // Atualiza as coordenadas x e y do mob
         moby = closestY;
-        map[moby][mobx] = map[moby][mobx];
         map[moby][mobx] = temp;  // Coloca o mob na nova posição
+
+        if (player->x == mobx && player->y == moby)
+            life--;
     }
 }
-
 
 void moveAllMobs(struct class_obj *player, char **map, WINDOW *win)
 {
@@ -393,6 +394,27 @@ int main()
     timeout(0);
     leaveok(stdscr, TRUE);
     curs_set(0);
+    SDL_Init(SDL_INIT_AUDIO);
+    SDL_AudioSpec wavSpec1;
+    Uint32 wavLength1;
+    Uint8* wavBuffer1;
+    SDL_AudioSpec wavSpec2;
+    Uint32 wavLength2;
+    Uint8* wavBuffer2;
+    SDL_AudioSpec wavSpec3;
+    Uint32 wavLength3;
+    Uint8* wavBuffer3;
+    SDL_AudioSpec wavSpec4;
+    Uint32 wavLength4;
+    Uint8* wavBuffer4;
+        SDL_LoadWAV("gunsound.wav",&wavSpec1, &wavBuffer1, &wavLength1);
+        SDL_AudioDeviceID deviceId1 = SDL_OpenAudioDevice(NULL, 0, &wavSpec1, NULL, 0);
+        SDL_LoadWAV("sword.wav",&wavSpec2, &wavBuffer2, &wavLength2);
+        SDL_AudioDeviceID deviceId2 = SDL_OpenAudioDevice(NULL, 0, &wavSpec2, NULL, 0);
+        SDL_LoadWAV("zombie.wav",&wavSpec3, &wavBuffer3, &wavLength3);
+        SDL_AudioDeviceID deviceId3 = SDL_OpenAudioDevice(NULL, 0, &wavSpec3, NULL, 0);
+        SDL_LoadWAV("gameOver.wav",&wavSpec4, &wavBuffer4, &wavLength4);
+        SDL_AudioDeviceID deviceId4 = SDL_OpenAudioDevice(NULL, 0, &wavSpec4, NULL, 0);
 
 
     // Enumera os estados do jogo
@@ -476,6 +498,7 @@ int main()
 
             // Cria uma nova janela
     WINDOW *win = newwin(MAP_HEIGHT, MAP_WIDTH, 0, 0);
+        
 
     // Habilita o uso de teclas especiais (como as setas do teclado)
     keypad(win, TRUE);
@@ -508,11 +531,8 @@ int main()
         // Limpa a janela
         werase(win);
         wattron(win, COLOR_PAIR(1));
-        
-        wattron(win, COLOR_PAIR(3));
-        moveAllMobs(&player, map, win);
+        //moveAllMobs(&player, map, win);
         desenhaMobs(map, win);
-        wattroff(win, COLOR_PAIR(3));
         
         // Desenha a visão do jogador
         desenhaVisao(&player, map, win, visaoAtivada);
@@ -570,8 +590,17 @@ int main()
     case 't':
         visaoAtivada = !visaoAtivada;
         break;
+    case 'a':
+        ataque_melee(player.x,player.y, player.direction,map,win);
+        SDL_QueueAudio(deviceId2, wavBuffer2, wavLength2);
+        SDL_PauseAudioDevice(deviceId2, 0); break;
+    //case 's':
+      //  ataque_ranged(&player,map);desenha_bala(&player, map,win);break;
     default:
         break;
+}
+    if (map[player.y][player.x] == 'e' || map[player.y][player.x] == 'b' || map[player.y][player.x] == 'c') {
+    life--;
 }
         // Atualiza a posição atual do jogador no mapa
         map[player.y][player.x] = '@';
@@ -603,6 +632,17 @@ int main()
 
     // Finaliza a biblioteca ncurses
     endwin();
+    SDL_CloseAudioDevice(deviceId1);
+    SDL_FreeWAV(wavBuffer1);
+    SDL_CloseAudioDevice(deviceId2);
+    SDL_FreeWAV(wavBuffer2);
+    SDL_CloseAudioDevice(deviceId3);
+    SDL_FreeWAV(wavBuffer3);
+    SDL_CloseAudioDevice(deviceId4);
+    SDL_FreeWAV(wavBuffer4);
+
+    // Finaliza a biblioteca SDL
+    SDL_Quit();
 
     return 0;
 }
