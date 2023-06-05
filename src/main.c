@@ -614,6 +614,7 @@ int main()
     SDL_AudioDeviceID deviceId3 = SDL_OpenAudioDevice(NULL, 0, &wavSpec3, NULL, 0);
     SDL_LoadWAV("kill.wav", &wavSpec4, &wavBuffer4, &wavLength4);
     SDL_AudioDeviceID deviceId4 = SDL_OpenAudioDevice(NULL, 0, &wavSpec4, NULL, 0);
+    WINDOW *win;
 
     // Enumera os estados do jogo
     typedef enum
@@ -691,7 +692,7 @@ int main()
         case ESTADO_GAME:
 
             // Cria uma nova janela
-            WINDOW *win = newwin(MAP_HEIGHT, MAP_WIDTH, 0, 0);
+            win = newwin(MAP_HEIGHT, MAP_WIDTH, 0, 0);
 
             // Habilita o uso de teclas especiais (como as setas do teclado)
             keypad(win, TRUE);
