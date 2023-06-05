@@ -729,9 +729,7 @@ int main()
                 // Limpa a janela
                 werase(win);
                 wattron(win, COLOR_PAIR(1));
-                moveAllMobs(&player, map);
                 desenhaMobs(map, win);
-
                 // Desenha a visão do jogador
                 wattron(win, COLOR_PAIR(1));
                 desenhaVisao(&player, map, win, visaoAtivada);
@@ -771,7 +769,7 @@ int main()
                             SDL_PauseAudioDevice(deviceId3, 0);
                         }
                         m++;
-                    }
+                    }moveAllMobs(&player, map);
                     break;
                 case KEY_DOWN:
                     if (player.y < MAP_HEIGHT - 3 && map[player.y + 1][player.x] != '#')
@@ -786,7 +784,7 @@ int main()
                         }
                         m++;
 
-                    }
+                    }moveAllMobs(&player, map);
                     break;
                 case KEY_LEFT:
                     if (player.x > 2 && map[player.y][player.x - 1] != '#')
@@ -801,7 +799,7 @@ int main()
                         }
                         m++;
 
-                    }
+                    }moveAllMobs(&player, map);
                     break;
                 case KEY_RIGHT:
                     if (player.x < MAP_WIDTH - 3 && map[player.y][player.x + 1] != '#')
@@ -816,7 +814,8 @@ int main()
                         }
                         m++;
 
-                    }
+                    }moveAllMobs(&player, map);
+
                     break;
                 case 'p':
                     updateMap(MAP_WIDTH, MAP_HEIGHT, map);
