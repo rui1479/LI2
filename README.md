@@ -1,1 +1,3 @@
-# LI2.1
+# LI2
+
+Roguelite em C
